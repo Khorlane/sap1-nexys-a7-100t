@@ -1,6 +1,6 @@
 ## ---------------------------------------------------------------------------
 ## sap1_top.xdc
-## Nexys A7-100T board constraints for SAP-1 project
+## Nexys A7-100T board constraints for SAP-1 project (xc7a100tcsg324-1)
 ##
 ## Top module: sap1_top
 ## ---------------------------------------------------------------------------
@@ -40,10 +40,8 @@ set_property -dict { PACKAGE_PIN N17 IOSTANDARD LVCMOS33 } [get_ports { BTNC }]
 set_property -dict { PACKAGE_PIN M18 IOSTANDARD LVCMOS33 } [get_ports { BTNU }]
 
 ## LEDs
-## LED0 = auto pulse
-## LED1 = manual pulse
-## LED3 = mode
-## LED4 = halt
+## LED0 = SW0 mode
+## LED1 = SW1 halt
 set_property -dict { PACKAGE_PIN H17 IOSTANDARD LVCMOS33 } [get_ports { LED[0] }]
 set_property -dict { PACKAGE_PIN K15 IOSTANDARD LVCMOS33 } [get_ports { LED[1] }]
 set_property -dict { PACKAGE_PIN J13 IOSTANDARD LVCMOS33 } [get_ports { LED[2] }]
@@ -63,7 +61,9 @@ set_property -dict { PACKAGE_PIN V11 IOSTANDARD LVCMOS33 } [get_ports { LED[15] 
 
 ## RGB LED
 ## LED16_R = selected SAP clock-enable pulse
+## LED17_R = astable/auto pulse always
 set_property -dict { PACKAGE_PIN N15 IOSTANDARD LVCMOS33 } [get_ports { LED16_R }]
+set_property -dict { PACKAGE_PIN N16 IOSTANDARD LVCMOS33 } [get_ports { LED17_R }]
 
 ## 7-segment display segments
 set_property -dict { PACKAGE_PIN T10 IOSTANDARD LVCMOS33 } [get_ports { SEG[0] }]

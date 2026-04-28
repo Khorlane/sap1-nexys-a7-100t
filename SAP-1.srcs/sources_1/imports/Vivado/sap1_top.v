@@ -10,7 +10,7 @@
 //   - Instantiates only the SAP-1 clock controller.
 //   - Exposes the clock state on LEDs.
 //   - Dims LED0-LED15 through global 8-bit PWM.
-//   - Dims LED16_R separately because the RGB LED is much brighter.
+//   - Dims LED16_R/LED17_R separately because the RGB LEDs are much brighter.
 //
 // Board controls:
 //   BTNU = reset
@@ -20,14 +20,13 @@
 //
 // LEDs before PWM dimming:
 //   LED16_R = selected SAP clock-enable pulse, stretched locally for visibility
-//   LED0    = automatic clock pulse, stretched by sap1_clock
-//   LED1    = manual step pulse, stretched by sap1_clock
-//   LED3    = clock mode
-//   LED4    = halt
+//   LED17_R = astable/auto pulse, always independent of mode/halt
+//   LED0    = clock mode
+//   LED1    = halt
 //
 // LED brightness:
 //   LED0-LED15 are controlled by LED_PWM_DUTY1 in sap1_config.vh.
-//   LED16_R uses its own lower PWM duty LED_PWM_DUTY2 because the RGB LED is very bright.
+//   LED16_R/LED17_R use their own lower PWM duty LED_PWM_DUTY2 because the RGB LEDs are very bright.
 // -----------------------------------------------------------------------------
 
 module sap1_top (
@@ -38,6 +37,7 @@ module sap1_top (
 
     output wire [15:0] LED,
     output wire        LED16_R,
+    output wire        LED17_R,
 
     output wire [7:0]  AN,
     output wire [6:0]  SEG,
@@ -58,6 +58,7 @@ module sap1_top (
     wire led16_pwm_enable;
 
     wire raw_led16_r;
+    wire raw_led17_r;
     wire [15:0] raw_led;
 
     reg [23:0] led16_hold;
@@ -107,8 +108,8 @@ module sap1_top (
         .pwm_enable(led_pwm_enable)
     );
 
-    // Separate much lower PWM duty for LED16_R.
-    // LED16_R is the red channel of an RGB LED and is much brighter than LED0-LED15.
+    // Separate much lower PWM duty for LED16_R/LED17_R.
+    // The red channels of the RGB LEDs are much brighter than LED0-LED15.
     sap1_led_pwm #(
         .PWM_DUTY(`LED_PWM_DUTY2)
     ) u_led16_pwm (
@@ -130,15 +131,14 @@ module sap1_top (
     end
 
     assign raw_led16_r = (led16_hold != 24'd0);
+    assign raw_led17_r = led_auto_clock;
 
-    assign raw_led[0]    = led_auto_clock;
-    assign raw_led[1]    = led_manual_clock;
-    assign raw_led[2]    = 1'b0;
-    assign raw_led[3]    = led_mode;
-    assign raw_led[4]    = led_halt;
-    assign raw_led[15:5] = 11'b00000000000;
+    assign raw_led[0]    = led_mode;
+    assign raw_led[1]    = led_halt;
+    assign raw_led[15:2] = 14'b00000000000000;
 
     assign LED16_R = raw_led16_r & led16_pwm_enable;
+    assign LED17_R = raw_led17_r & led16_pwm_enable;
     assign LED     = raw_led & {16{led_pwm_enable}};
 
     // Seven-segment display intentionally blank for this stage.
