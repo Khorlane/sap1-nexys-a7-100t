@@ -44,6 +44,8 @@ module sap1_top (
     output wire        DP
 );
     wire reset;
+    wire mode_switch_sync;
+    wire halt_switch_sync;
     wire sap_clk_en;
 
     wire led_selected_clock;
@@ -62,6 +64,20 @@ module sap1_top (
 
     assign reset = BTNU;
 
+    sap1_switch_sync u_mode_switch_sync (
+        .clk(CLK100MHZ),
+        .reset(reset),
+        .switch_raw(SW[0]),
+        .switch_sync(mode_switch_sync)
+    );
+
+    sap1_switch_sync u_halt_switch_sync (
+        .clk(CLK100MHZ),
+        .reset(reset),
+        .switch_raw(SW[1]),
+        .switch_sync(halt_switch_sync)
+    );
+
     sap1_clock #(
         .AUTO_PERIOD_CLKS(`AUTO_PERIOD_CLKS),
         .DEBOUNCE_CLKS(`DEBOUNCE_CLKS),
@@ -70,8 +86,8 @@ module sap1_top (
         .clk(CLK100MHZ),
         .reset(reset),
         .step_button(BTNC),
-        .mode_switch(SW[0]),
-        .halt_switch(SW[1]),
+        .mode_switch(mode_switch_sync),
+        .halt_switch(halt_switch_sync),
 
         .sap_clk_en(sap_clk_en),
 
@@ -130,6 +146,30 @@ module sap1_top (
     assign AN  = 8'b11111111;
     assign SEG = 7'b1111111;
     assign DP  = 1'b1;
+
+endmodule
+
+
+module sap1_switch_sync (
+    input  wire clk,
+    input  wire reset,
+    input  wire switch_raw,
+    output wire switch_sync
+);
+    reg sync_0;
+    reg sync_1;
+
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            sync_0 <= 1'b0;
+            sync_1 <= 1'b0;
+        end else begin
+            sync_0 <= switch_raw;
+            sync_1 <= sync_0;
+        end
+    end
+
+    assign switch_sync = sync_1;
 
 endmodule
 
