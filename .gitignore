@@ -5,6 +5,7 @@
 *.sim/
 *.ip_user_files/
 .Xil/
+xsim.dir/
 
 # Generated synthesis/implementation artifacts
 *.bit
