@@ -1,0 +1,33 @@
+# Vivado generated project/build output
+*.cache/
+*.hw/
+*.runs/
+*.sim/
+*.ip_user_files/
+.Xil/
+
+# Generated synthesis/implementation artifacts
+*.bit
+*.bin
+*.ltx
+*.dcp
+*.rpt
+*.rpx
+*.vdi
+*.pb
+*.wdf
+*.wdb
+*.wcfg
+
+# Vivado logs, journals, and temporary files
+*.jou
+*.log
+*.str
+*.backup.jou
+*.backup.vdi
+*.bak
+*.tmp
+*backup*
+
+# Imported/generated utility outputs
+SAP-1.srcs/utils_1/
