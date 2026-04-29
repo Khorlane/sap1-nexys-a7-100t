@@ -7,22 +7,28 @@
 // Top-level Nexys A7-100T SAP-1 shell.
 //
 // Current build stage:
-//   - Instantiates only the SAP-1 clock controller.
-//   - Exposes the clock state on LEDs.
+//   - Instantiates the SAP-1 clock controller.
+//   - Instantiates temporary manual bus/Register A load test harness.
+//   - Exposes the clock state and manual bus controls on LEDs.
 //   - Dims LED0-LED15 through global 8-bit PWM.
 //   - Dims LED16_R/LED17_R separately because the RGB LEDs are much brighter.
 //
 // Board controls:
 //   BTNU = reset
 //   BTNC = manual step
+//   BTNL = request one A-register load on the next SAP clock-enable pulse
 //   SW0  = clock mode: 0 auto, 1 manual
 //   SW1  = halt:       0 run,  1 halted
+//   SW7  = manual bus output-enable
+//   SW15-SW8 = manual bus value
 //
 // LEDs before PWM dimming:
 //   LED16_R = selected SAP clock-enable pulse, stretched locally for visibility
 //   LED17_R = astable/auto pulse, always independent of mode/halt
 //   LED0    = clock mode
 //   LED1    = halt
+//   LED7    = manual bus output-enable
+//   LED15-8 = manual bus value
 //
 // LED brightness:
 //   LED0-LED15 are controlled by LED_PWM_DUTY1 in sap1_config.vh.
@@ -32,6 +38,7 @@
 module sap1_top (
     input  wire        CLK100MHZ,
     input  wire        BTNC,
+    input  wire        BTNL,
     input  wire        BTNU,
     input  wire [15:0] SW,
 
@@ -41,12 +48,30 @@ module sap1_top (
 
     output wire [7:0]  AN,
     output wire [6:0]  SEG,
-    output wire        DP
+    output wire        DP,
+
+    output wire [3:0]  VGA_R,
+    output wire [3:0]  VGA_G,
+    output wire [3:0]  VGA_B,
+    output wire        VGA_HS,
+    output wire        VGA_VS
 );
     wire reset;
     wire mode_switch_sync;
     wire halt_switch_sync;
     wire sap_clk_en;
+    wire load_a_button_pulse;
+
+    wire [7:0] manual_bus_value;
+    wire       manual_bus_oe;
+    wire [7:0] sap_bus_value;
+    wire       bus_conflict;
+
+    wire       a_input_enable;
+    wire       a_output_enable;
+    wire [7:0] a_value;
+    wire [7:0] a_out;
+    wire       a_oe;
 
     wire led_selected_clock;
     wire led_auto_clock;
@@ -62,8 +87,13 @@ module sap1_top (
     wire [15:0] raw_led;
 
     reg [23:0] led16_hold;
+    reg        ai_pending;
 
     assign reset = BTNU;
+    assign manual_bus_value = SW[15:8];
+    assign manual_bus_oe    = SW[7];
+    assign a_input_enable   = ai_pending;
+    assign a_output_enable  = 1'b0;
 
     sap1_switch_sync u_mode_switch_sync (
         .clk(CLK100MHZ),
@@ -97,6 +127,58 @@ module sap1_top (
         .led_manual_clock(led_manual_clock),
         .led_mode(led_mode),
         .led_halt(led_halt)
+    );
+
+    sap1_clock_manual #(
+        .DEBOUNCE_CLKS(`DEBOUNCE_CLKS)
+    ) u_load_a_button (
+        .clk(CLK100MHZ),
+        .reset(reset),
+        .button_raw(BTNL),
+        .pulse(load_a_button_pulse)
+    );
+
+    always @(posedge CLK100MHZ or posedge reset) begin
+        if (reset) begin
+            ai_pending <= 1'b0;
+        end else if (sap_clk_en && ai_pending) begin
+            ai_pending <= 1'b0;
+        end else if (load_a_button_pulse) begin
+            ai_pending <= 1'b1;
+        end
+    end
+
+    register_a u_register_a (
+        .clk(CLK100MHZ),
+        .reset(reset),
+        .sap_clk_en(sap_clk_en),
+        .AI(a_input_enable),
+        .AO(a_output_enable),
+        .bus_value(sap_bus_value),
+        .a_value(a_value),
+        .a_out(a_out),
+        .a_oe(a_oe)
+    );
+
+    bus u_bus (
+        .a_out(a_out),
+        .a_oe(a_oe),
+        .manual_bus_value(manual_bus_value),
+        .manual_bus_oe(manual_bus_oe),
+        .bus_value(sap_bus_value),
+        .bus_conflict(bus_conflict)
+    );
+
+    sap1_vga_debug_display u_vga_debug_display (
+        .clk(CLK100MHZ),
+        .reset(reset),
+        .bus_value(sap_bus_value),
+        .a_value(a_value),
+        .vga_r(VGA_R),
+        .vga_g(VGA_G),
+        .vga_b(VGA_B),
+        .vga_hs(VGA_HS),
+        .vga_vs(VGA_VS)
     );
 
     // Global PWM dimmer for LED0-LED15.
@@ -135,7 +217,9 @@ module sap1_top (
 
     assign raw_led[0]    = led_mode;
     assign raw_led[1]    = led_halt;
-    assign raw_led[15:2] = 14'b00000000000000;
+    assign raw_led[6:2]  = 5'b00000;
+    assign raw_led[7]    = manual_bus_oe;
+    assign raw_led[15:8] = manual_bus_value;
 
     assign LED16_R = raw_led16_r & led16_pwm_enable;
     assign LED17_R = raw_led17_r & led16_pwm_enable;

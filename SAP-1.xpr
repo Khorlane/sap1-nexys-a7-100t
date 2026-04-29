@@ -90,6 +90,24 @@
   <FileSets Version="1" Minor="32">
     <FileSet Name="sources_1" Type="DesignSrcs" RelSrcDir="$PSRCDIR/sources_1" RelGenDir="$PGENDIR/sources_1">
       <Filter Type="Srcs"/>
+      <File Path="$PSRCDIR/sources_1/imports/Vivado/bus.v">
+        <FileInfo>
+          <Attr Name="ImportPath" Val="$PPRDIR/../bus.v"/>
+          <Attr Name="ImportTime" Val="0"/>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PSRCDIR/sources_1/imports/Vivado/register_a.v">
+        <FileInfo>
+          <Attr Name="ImportPath" Val="$PPRDIR/../register_a.v"/>
+          <Attr Name="ImportTime" Val="0"/>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
       <File Path="$PSRCDIR/sources_1/imports/Vivado/sap1_config.vh">
         <FileInfo>
           <Attr Name="ImportPath" Val="$PPRDIR/../sap1_config.vh"/>
@@ -103,6 +121,13 @@
         <FileInfo>
           <Attr Name="ImportPath" Val="$PPRDIR/../sap1_clock.v"/>
           <Attr Name="ImportTime" Val="1777317016"/>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PSRCDIR/sources_1/imports/Vivado/vga_debug_display.v">
+        <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
