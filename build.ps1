@@ -1,8 +1,9 @@
 param(
     [switch]$Program,
     [switch]$NoProgram,
+    [switch]$OnlyProgram,
     [switch]$Clean,
-    [switch]$CleanOnly,
+    [switch]$OnlyClean,
     [int]$Jobs = 8,
     [string]$VivadoRoot = "E:\AMDDesignTools\2025.2",
     [string]$Project = "SAP-1.xpr"
@@ -34,29 +35,32 @@ function Clear-VivadoSessionLogs {
 
 function Show-Usage {
     Write-Host "Usage:"
-    Write-Host "  .\build.ps1 -NoProgram [-Clean] [-Jobs <n>] [-VivadoRoot <path>] [-Project <path>]"
-    Write-Host "  .\build.ps1 -Program   [-Clean] [-Jobs <n>] [-VivadoRoot <path>] [-Project <path>]"
-    Write-Host "  .\build.ps1 -CleanOnly"
+    Write-Host "  .\build.ps1 -NoProgram   [-Clean] [-Jobs <n>] [-VivadoRoot <path>] [-Project <path>]"
+    Write-Host "  .\build.ps1 -Program     [-Clean] [-Jobs <n>] [-VivadoRoot <path>] [-Project <path>]"
+    Write-Host "  .\build.ps1 -OnlyProgram [-Clean] [-VivadoRoot <path>] [-Project <path>]"
+    Write-Host "  .\build.ps1 -OnlyClean"
 }
 
-if ($CleanOnly -and ($Program -or $NoProgram -or $Clean)) {
+$buildModeCount = @($Program, $NoProgram, $OnlyProgram) | Where-Object { $_ } | Measure-Object | Select-Object -ExpandProperty Count
+
+if ($OnlyClean -and ($Program -or $NoProgram -or $OnlyProgram -or $Clean)) {
     Show-Usage
-    throw "Use -CleanOnly by itself."
+    throw "Use -OnlyClean by itself."
 }
 
-if ($Program -and $NoProgram) {
+if ($buildModeCount -gt 1) {
     Show-Usage
-    throw "Choose only one mode: -Program or -NoProgram."
+    throw "Choose only one mode: -Program, -NoProgram, or -OnlyProgram."
 }
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 
-if ($CleanOnly) {
+if ($OnlyClean) {
     Clear-VivadoSessionLogs -Path $scriptDir
     exit 0
 }
 
-if (-not $Program -and -not $NoProgram) {
+if ($buildModeCount -eq 0) {
     Show-Usage
     exit 1
 }
@@ -81,13 +85,15 @@ $argsList = @(
 
 if ($Program) {
     $argsList += "program"
+} elseif ($OnlyProgram) {
+    $argsList += "only_program"
 } else {
     $argsList += "build"
 }
 
 Write-Host "Running Vivado flow..."
 Write-Host "Project: $projectPath"
-Write-Host "Mode:    $(if ($Program) { 'build and program' } else { 'build only' })"
+Write-Host "Mode:    $(if ($Program) { 'build and program' } elseif ($OnlyProgram) { 'program existing bitstream only' } else { 'build only' })"
 
 & $vivadoBat @argsList
 $vivadoExitCode = $LASTEXITCODE

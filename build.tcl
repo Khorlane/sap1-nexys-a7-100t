@@ -14,27 +14,38 @@ if {$mode eq ""} {
     set mode "build"
 }
 
-open_project $project_path
-reset_run synth_1
-launch_runs synth_1 -jobs $jobs
-wait_on_run synth_1
-
-if {[get_property PROGRESS [get_runs synth_1]] ne "100%"} {
-    error "Synthesis did not complete successfully."
+if {$mode ne "build" && $mode ne "program" && $mode ne "only_program"} {
+    error "Unknown mode: $mode"
 }
 
-reset_run impl_1
-launch_runs impl_1 -to_step write_bitstream -jobs $jobs
-wait_on_run impl_1
+open_project $project_path
 
-if {[get_property PROGRESS [get_runs impl_1]] ne "100%"} {
-    error "Implementation/bitstream did not complete successfully."
+if {$mode ne "only_program"} {
+    reset_run synth_1
+    launch_runs synth_1 -jobs $jobs
+    wait_on_run synth_1
+
+    if {[get_property PROGRESS [get_runs synth_1]] ne "100%"} {
+        error "Synthesis did not complete successfully."
+    }
+
+    reset_run impl_1
+    launch_runs impl_1 -to_step write_bitstream -jobs $jobs
+    wait_on_run impl_1
+
+    if {[get_property PROGRESS [get_runs impl_1]] ne "100%"} {
+        error "Implementation/bitstream did not complete successfully."
+    }
 }
 
 set bitstream_path [get_property DIRECTORY [get_runs impl_1]]/[get_property top [current_fileset]].bit
 puts "Bitstream: $bitstream_path"
 
-if {$mode eq "program"} {
+if {$mode eq "program" || $mode eq "only_program"} {
+    if {![file exists $bitstream_path]} {
+        error "Bitstream was not found at: $bitstream_path"
+    }
+
     open_hw_manager
     connect_hw_server
     open_hw_target
