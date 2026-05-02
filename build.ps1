@@ -10,7 +10,7 @@ $ErrorActionPreference = "Stop"
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $projectPath = Join-Path $scriptDir $Project
 $vivadoBat = Join-Path $VivadoRoot "Vivado\bin\vivado.bat"
-$flowTcl = Join-Path $scriptDir "vivado_build_and_program.tcl"
+$flowTcl = Join-Path $scriptDir "build.tcl"
 
 if (-not (Test-Path $vivadoBat)) {
     throw "Vivado was not found at: $vivadoBat"
