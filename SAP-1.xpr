@@ -108,6 +108,15 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
+      <File Path="$PSRCDIR/sources_1/imports/Vivado/register_b.v">
+        <FileInfo>
+          <Attr Name="ImportPath" Val="$PPRDIR/../register_b.v"/>
+          <Attr Name="ImportTime" Val="0"/>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
       <File Path="$PSRCDIR/sources_1/imports/Vivado/sap1_config.vh">
         <FileInfo>
           <Attr Name="ImportPath" Val="$PPRDIR/../sap1_config.vh"/>

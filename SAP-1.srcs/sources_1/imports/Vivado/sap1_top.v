@@ -17,6 +17,7 @@
 //   BTNU = reset
 //   BTNC = manual step
 //   BTNL = request one A-register load on the next SAP clock-enable pulse
+//   BTNR = request one B-register load on the next SAP clock-enable pulse
 //   SW0  = clock mode: 0 auto, 1 manual
 //   SW1  = halt:       0 run,  1 halted
 //   SW7  = manual bus output-enable
@@ -39,6 +40,7 @@ module sap1_top (
     input  wire        CLK100MHZ,
     input  wire        BTNC,
     input  wire        BTNL,
+    input  wire        BTNR,
     input  wire        BTNU,
     input  wire [15:0] SW,
 
@@ -61,6 +63,7 @@ module sap1_top (
     wire halt_switch_sync;
     wire sap_clk_en;
     wire load_a_button_pulse;
+    wire load_b_button_pulse;
 
     wire [7:0] manual_bus_value;
     wire       manual_bus_oe;
@@ -72,6 +75,9 @@ module sap1_top (
     wire [7:0] a_value;
     wire [7:0] a_out;
     wire       a_oe;
+
+    wire       b_input_enable;
+    wire [7:0] b_value;
 
     wire led_selected_clock;
     wire led_auto_clock;
@@ -88,12 +94,14 @@ module sap1_top (
 
     reg [23:0] led16_hold;
     reg        ai_pending;
+    reg        bi_pending;
 
     assign reset = BTNU;
     assign manual_bus_value = SW[15:8];
     assign manual_bus_oe    = SW[7];
     assign a_input_enable   = ai_pending;
     assign a_output_enable  = 1'b0;
+    assign b_input_enable   = bi_pending;
 
     sap1_switch_sync u_mode_switch_sync (
         .clk(CLK100MHZ),
@@ -138,6 +146,15 @@ module sap1_top (
         .pulse(load_a_button_pulse)
     );
 
+    sap1_clock_manual #(
+        .DEBOUNCE_CLKS(`DEBOUNCE_CLKS)
+    ) u_load_b_button (
+        .clk(CLK100MHZ),
+        .reset(reset),
+        .button_raw(BTNR),
+        .pulse(load_b_button_pulse)
+    );
+
     always @(posedge CLK100MHZ or posedge reset) begin
         if (reset) begin
             ai_pending <= 1'b0;
@@ -145,6 +162,16 @@ module sap1_top (
             ai_pending <= 1'b0;
         end else if (load_a_button_pulse) begin
             ai_pending <= 1'b1;
+        end
+    end
+
+    always @(posedge CLK100MHZ or posedge reset) begin
+        if (reset) begin
+            bi_pending <= 1'b0;
+        end else if (sap_clk_en && bi_pending) begin
+            bi_pending <= 1'b0;
+        end else if (load_b_button_pulse) begin
+            bi_pending <= 1'b1;
         end
     end
 
@@ -158,6 +185,15 @@ module sap1_top (
         .a_value(a_value),
         .a_out(a_out),
         .a_oe(a_oe)
+    );
+
+    register_b u_register_b (
+        .clk(CLK100MHZ),
+        .reset(reset),
+        .sap_clk_en(sap_clk_en),
+        .BI(b_input_enable),
+        .bus_value(sap_bus_value),
+        .b_value(b_value)
     );
 
     bus u_bus (
@@ -174,6 +210,7 @@ module sap1_top (
         .reset(reset),
         .bus_value(sap_bus_value),
         .a_value(a_value),
+        .b_value(b_value),
         .vga_r(VGA_R),
         .vga_g(VGA_G),
         .vga_b(VGA_B),

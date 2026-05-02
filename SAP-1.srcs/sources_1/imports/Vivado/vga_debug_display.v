@@ -3,7 +3,7 @@
 // -----------------------------------------------------------------------------
 // vga_debug_display.v
 //
-// Read-only VGA debug display for the SAP-1 bus and Register A.
+// Read-only VGA debug display for the SAP-1 bus, Register A, and Register B.
 // Generates simple 640x480-style VGA timing from CLK100MHZ using a /4 pixel tick.
 // -----------------------------------------------------------------------------
 
@@ -12,6 +12,7 @@ module sap1_vga_debug_display (
     input  wire       reset,
     input  wire [7:0] bus_value,
     input  wire [7:0] a_value,
+    input  wire [7:0] b_value,
 
     output wire [3:0] vga_r,
     output wire [3:0] vga_g,
@@ -78,6 +79,7 @@ module sap1_vga_debug_display (
         .y(v_count),
         .bus_value(bus_value),
         .a_value(a_value),
+        .b_value(b_value),
         .text_pixel(text_pixel)
     );
 
@@ -93,15 +95,17 @@ module sap1_vga_debug_text (
     input  wire [9:0] y,
     input  wire [7:0] bus_value,
     input  wire [7:0] a_value,
+    input  wire [7:0] b_value,
     output wire       text_pixel
 );
     localparam TEXT_X = 10'd16;
     localparam TEXT_Y = 10'd16;
     localparam LINE0  = 4'd0;
     localparam LINE1  = 4'd2;
+    localparam LINE2  = 4'd4;
 
     wire in_text_area = (x >= TEXT_X) && (x < TEXT_X + 10'd192) &&
-                        (y >= TEXT_Y) && (y < TEXT_Y + 10'd32);
+                        (y >= TEXT_Y) && (y < TEXT_Y + 10'd48);
     wire [9:0] rel_x = x - TEXT_X;
     wire [9:0] rel_y = y - TEXT_Y;
     wire [4:0] char_col = rel_x[9:3];
@@ -158,6 +162,28 @@ module sap1_vga_debug_text (
                 5'd18: glyph = a_value[2] ? "1" : "0";
                 5'd19: glyph = a_value[1] ? "1" : "0";
                 5'd20: glyph = a_value[0] ? "1" : "0";
+                default: glyph = 8'h20;
+            endcase
+        end else if (char_row == LINE2) begin
+            case (char_col)
+                5'd0:  glyph = "R";
+                5'd1:  glyph = "e";
+                5'd2:  glyph = "g";
+                5'd3:  glyph = "i";
+                5'd4:  glyph = "s";
+                5'd5:  glyph = "t";
+                5'd6:  glyph = "e";
+                5'd7:  glyph = "r";
+                5'd9:  glyph = "B";
+                5'd11: glyph = "-";
+                5'd13: glyph = b_value[7] ? "1" : "0";
+                5'd14: glyph = b_value[6] ? "1" : "0";
+                5'd15: glyph = b_value[5] ? "1" : "0";
+                5'd16: glyph = b_value[4] ? "1" : "0";
+                5'd17: glyph = b_value[3] ? "1" : "0";
+                5'd18: glyph = b_value[2] ? "1" : "0";
+                5'd19: glyph = b_value[1] ? "1" : "0";
+                5'd20: glyph = b_value[0] ? "1" : "0";
                 default: glyph = 8'h20;
             endcase
         end
