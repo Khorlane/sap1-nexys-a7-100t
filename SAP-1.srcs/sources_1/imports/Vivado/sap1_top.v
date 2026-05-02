@@ -20,6 +20,8 @@
 //   BTNR = request one B-register load on the next SAP clock-enable pulse
 //   SW0  = clock mode: 0 auto, 1 manual
 //   SW1  = halt:       0 run,  1 halted
+//   SW5  = ALU subtract control
+//   SW6  = ALU output-enable
 //   SW7  = manual bus output-enable
 //   SW15-SW8 = manual bus value
 //
@@ -28,6 +30,8 @@
 //   LED17_R = astable/auto pulse, always independent of mode/halt
 //   LED0    = clock mode
 //   LED1    = halt
+//   LED5    = ALU subtract control
+//   LED6    = ALU output-enable
 //   LED7    = manual bus output-enable
 //   LED15-8 = manual bus value
 //
@@ -61,6 +65,8 @@ module sap1_top (
     wire reset;
     wire mode_switch_sync;
     wire halt_switch_sync;
+    wire su_switch_sync;
+    wire eo_switch_sync;
     wire sap_clk_en;
     wire load_a_button_pulse;
     wire load_b_button_pulse;
@@ -78,6 +84,11 @@ module sap1_top (
 
     wire       b_input_enable;
     wire [7:0] b_value;
+
+    wire [7:0] alu_result;
+    wire [7:0] alu_out;
+    wire       alu_oe;
+    wire       alu_carry_out;
 
     wire led_selected_clock;
     wire led_auto_clock;
@@ -115,6 +126,20 @@ module sap1_top (
         .reset(reset),
         .switch_raw(SW[1]),
         .switch_sync(halt_switch_sync)
+    );
+
+    sap1_switch_sync u_su_switch_sync (
+        .clk(CLK100MHZ),
+        .reset(reset),
+        .switch_raw(SW[5]),
+        .switch_sync(su_switch_sync)
+    );
+
+    sap1_switch_sync u_eo_switch_sync (
+        .clk(CLK100MHZ),
+        .reset(reset),
+        .switch_raw(SW[6]),
+        .switch_sync(eo_switch_sync)
     );
 
     sap1_clock #(
@@ -196,9 +221,22 @@ module sap1_top (
         .b_value(b_value)
     );
 
+    alu u_alu (
+        .a_value(a_value),
+        .b_value(b_value),
+        .EO(eo_switch_sync),
+        .SU(su_switch_sync),
+        .alu_result(alu_result),
+        .alu_out(alu_out),
+        .alu_oe(alu_oe),
+        .carry_out(alu_carry_out)
+    );
+
     bus u_bus (
         .a_out(a_out),
         .a_oe(a_oe),
+        .alu_out(alu_out),
+        .alu_oe(alu_oe),
         .manual_bus_value(manual_bus_value),
         .manual_bus_oe(manual_bus_oe),
         .bus_value(sap_bus_value),
@@ -211,6 +249,9 @@ module sap1_top (
         .bus_value(sap_bus_value),
         .a_value(a_value),
         .b_value(b_value),
+        .alu_result(alu_result),
+        .alu_su(su_switch_sync),
+        .alu_eo(eo_switch_sync),
         .vga_r(VGA_R),
         .vga_g(VGA_G),
         .vga_b(VGA_B),
@@ -254,7 +295,9 @@ module sap1_top (
 
     assign raw_led[0]    = led_mode;
     assign raw_led[1]    = led_halt;
-    assign raw_led[6:2]  = 5'b00000;
+    assign raw_led[4:2]  = 3'b000;
+    assign raw_led[5]    = su_switch_sync;
+    assign raw_led[6]    = eo_switch_sync;
     assign raw_led[7]    = manual_bus_oe;
     assign raw_led[15:8] = manual_bus_value;
 

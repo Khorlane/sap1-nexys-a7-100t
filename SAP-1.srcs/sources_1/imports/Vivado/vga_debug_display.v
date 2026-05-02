@@ -3,7 +3,7 @@
 // -----------------------------------------------------------------------------
 // vga_debug_display.v
 //
-// Read-only VGA debug display for the SAP-1 bus, Register A, and Register B.
+// Read-only VGA debug display for the SAP-1 bus, registers, and ALU.
 // Generates simple 640x480-style VGA timing from CLK100MHZ using a /4 pixel tick.
 // -----------------------------------------------------------------------------
 
@@ -13,6 +13,9 @@ module sap1_vga_debug_display (
     input  wire [7:0] bus_value,
     input  wire [7:0] a_value,
     input  wire [7:0] b_value,
+    input  wire [7:0] alu_result,
+    input  wire       alu_su,
+    input  wire       alu_eo,
 
     output wire [3:0] vga_r,
     output wire [3:0] vga_g,
@@ -80,6 +83,9 @@ module sap1_vga_debug_display (
         .bus_value(bus_value),
         .a_value(a_value),
         .b_value(b_value),
+        .alu_result(alu_result),
+        .alu_su(alu_su),
+        .alu_eo(alu_eo),
         .text_pixel(text_pixel)
     );
 
@@ -96,6 +102,9 @@ module sap1_vga_debug_text (
     input  wire [7:0] bus_value,
     input  wire [7:0] a_value,
     input  wire [7:0] b_value,
+    input  wire [7:0] alu_result,
+    input  wire       alu_su,
+    input  wire       alu_eo,
     output wire       text_pixel
 );
     localparam TEXT_X = 10'd16;
@@ -103,9 +112,10 @@ module sap1_vga_debug_text (
     localparam LINE0  = 4'd0;
     localparam LINE1  = 4'd2;
     localparam LINE2  = 4'd4;
+    localparam LINE3  = 4'd6;
 
-    wire in_text_area = (x >= TEXT_X) && (x < TEXT_X + 10'd192) &&
-                        (y >= TEXT_Y) && (y < TEXT_Y + 10'd48);
+    wire in_text_area = (x >= TEXT_X) && (x < TEXT_X + 10'd256) &&
+                        (y >= TEXT_Y) && (y < TEXT_Y + 10'd64);
     wire [9:0] rel_x = x - TEXT_X;
     wire [9:0] rel_y = y - TEXT_Y;
     wire [4:0] char_col = rel_x[9:3];
@@ -186,6 +196,28 @@ module sap1_vga_debug_text (
                 5'd20: glyph = b_value[0] ? "1" : "0";
                 default: glyph = 8'h20;
             endcase
+        end else if (char_row == LINE3) begin
+            case (char_col)
+                5'd0:  glyph = "A";
+                5'd1:  glyph = "L";
+                5'd2:  glyph = "U";
+                5'd4:  glyph = alu_su ? "S" : "A";
+                5'd5:  glyph = alu_su ? "U" : "D";
+                5'd6:  glyph = alu_su ? "B" : "D";
+                5'd8:  glyph = "E";
+                5'd9:  glyph = "O";
+                5'd10: glyph = alu_eo ? "1" : "0";
+                5'd12: glyph = "-";
+                5'd14: glyph = alu_result[7] ? "1" : "0";
+                5'd15: glyph = alu_result[6] ? "1" : "0";
+                5'd16: glyph = alu_result[5] ? "1" : "0";
+                5'd17: glyph = alu_result[4] ? "1" : "0";
+                5'd18: glyph = alu_result[3] ? "1" : "0";
+                5'd19: glyph = alu_result[2] ? "1" : "0";
+                5'd20: glyph = alu_result[1] ? "1" : "0";
+                5'd21: glyph = alu_result[0] ? "1" : "0";
+                default: glyph = 8'h20;
+            endcase
         end
     end
 
@@ -211,6 +243,46 @@ module sap1_vga_debug_text (
                 3'd6: glyph_row = 8'b01111100;
                 default: glyph_row = 8'b00000000;
             endcase
+            "D": case (glyph_y)
+                3'd0: glyph_row = 8'b01111100;
+                3'd1: glyph_row = 8'b01100110;
+                3'd2: glyph_row = 8'b01100110;
+                3'd3: glyph_row = 8'b01100110;
+                3'd4: glyph_row = 8'b01100110;
+                3'd5: glyph_row = 8'b01100110;
+                3'd6: glyph_row = 8'b01111100;
+                default: glyph_row = 8'b00000000;
+            endcase
+            "E": case (glyph_y)
+                3'd0: glyph_row = 8'b01111110;
+                3'd1: glyph_row = 8'b01100000;
+                3'd2: glyph_row = 8'b01100000;
+                3'd3: glyph_row = 8'b01111100;
+                3'd4: glyph_row = 8'b01100000;
+                3'd5: glyph_row = 8'b01100000;
+                3'd6: glyph_row = 8'b01111110;
+                default: glyph_row = 8'b00000000;
+            endcase
+            "L": case (glyph_y)
+                3'd0: glyph_row = 8'b01100000;
+                3'd1: glyph_row = 8'b01100000;
+                3'd2: glyph_row = 8'b01100000;
+                3'd3: glyph_row = 8'b01100000;
+                3'd4: glyph_row = 8'b01100000;
+                3'd5: glyph_row = 8'b01100000;
+                3'd6: glyph_row = 8'b01111110;
+                default: glyph_row = 8'b00000000;
+            endcase
+            "O": case (glyph_y)
+                3'd0: glyph_row = 8'b00111100;
+                3'd1: glyph_row = 8'b01100110;
+                3'd2: glyph_row = 8'b01100110;
+                3'd3: glyph_row = 8'b01100110;
+                3'd4: glyph_row = 8'b01100110;
+                3'd5: glyph_row = 8'b01100110;
+                3'd6: glyph_row = 8'b00111100;
+                default: glyph_row = 8'b00000000;
+            endcase
             "R": case (glyph_y)
                 3'd0: glyph_row = 8'b01111100;
                 3'd1: glyph_row = 8'b01100110;
@@ -219,6 +291,26 @@ module sap1_vga_debug_text (
                 3'd4: glyph_row = 8'b01111000;
                 3'd5: glyph_row = 8'b01101100;
                 3'd6: glyph_row = 8'b01100110;
+                default: glyph_row = 8'b00000000;
+            endcase
+            "S": case (glyph_y)
+                3'd0: glyph_row = 8'b00111110;
+                3'd1: glyph_row = 8'b01100000;
+                3'd2: glyph_row = 8'b01100000;
+                3'd3: glyph_row = 8'b00111100;
+                3'd4: glyph_row = 8'b00000110;
+                3'd5: glyph_row = 8'b00000110;
+                3'd6: glyph_row = 8'b01111100;
+                default: glyph_row = 8'b00000000;
+            endcase
+            "U": case (glyph_y)
+                3'd0: glyph_row = 8'b01100110;
+                3'd1: glyph_row = 8'b01100110;
+                3'd2: glyph_row = 8'b01100110;
+                3'd3: glyph_row = 8'b01100110;
+                3'd4: glyph_row = 8'b01100110;
+                3'd5: glyph_row = 8'b01100110;
+                3'd6: glyph_row = 8'b00111100;
                 default: glyph_row = 8'b00000000;
             endcase
             "e": case (glyph_y)

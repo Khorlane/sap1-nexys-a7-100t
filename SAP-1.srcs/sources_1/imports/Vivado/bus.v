@@ -13,6 +13,8 @@
 module bus (
     input  wire [7:0] a_out,
     input  wire       a_oe,
+    input  wire [7:0] alu_out,
+    input  wire       alu_oe,
     input  wire [7:0] manual_bus_value,
     input  wire       manual_bus_oe,
 
@@ -20,11 +22,15 @@ module bus (
     output wire       bus_conflict
 );
 
-    assign bus_conflict = a_oe & manual_bus_oe;
+    assign bus_conflict =
+        (a_oe & alu_oe) |
+        (a_oe & manual_bus_oe) |
+        (alu_oe & manual_bus_oe);
 
     assign bus_value =
         bus_conflict  ? 8'h00 :
         a_oe          ? a_out :
+        alu_oe        ? alu_out :
         manual_bus_oe ? manual_bus_value :
                         8'h00;
 
