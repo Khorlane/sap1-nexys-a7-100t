@@ -67,6 +67,7 @@ module sap1_top (
     wire halt_switch_sync;
     wire su_switch_sync;
     wire eo_switch_sync;
+    wire manual_bus_oe_sync;
     wire sap_clk_en;
     wire load_a_button_pulse;
     wire load_b_button_pulse;
@@ -109,7 +110,7 @@ module sap1_top (
 
     assign reset = BTNU;
     assign manual_bus_value = SW[15:8];
-    assign manual_bus_oe    = SW[7];
+    assign manual_bus_oe    = manual_bus_oe_sync;
     assign a_input_enable   = ai_pending;
     assign a_output_enable  = 1'b0;
     assign b_input_enable   = bi_pending;
@@ -140,6 +141,13 @@ module sap1_top (
         .reset(reset),
         .switch_raw(SW[6]),
         .switch_sync(eo_switch_sync)
+    );
+
+    sap1_switch_sync u_manual_bus_oe_sync (
+        .clk(CLK100MHZ),
+        .reset(reset),
+        .switch_raw(SW[7]),
+        .switch_sync(manual_bus_oe_sync)
     );
 
     sap1_clock #(
@@ -250,8 +258,11 @@ module sap1_top (
         .a_value(a_value),
         .b_value(b_value),
         .alu_result(alu_result),
+        .mode_switch(mode_switch_sync),
+        .halt_switch(halt_switch_sync),
         .alu_su(su_switch_sync),
         .alu_eo(eo_switch_sync),
+        .manual_bus_oe(manual_bus_oe),
         .vga_r(VGA_R),
         .vga_g(VGA_G),
         .vga_b(VGA_B),
