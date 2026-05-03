@@ -5,10 +5,11 @@
 //
 // Physical-style SAP-1 B register subassembly:
 //   - two 74LS173-style 4-bit register chips
+//   - one 74LS245-style 8-bit output buffer
 //
 // BI loads Register B from the shared bus on a sap_clk_en pulse.
-// Register B does not drive the shared bus in the standard SAP-1 datapath;
-// its value is made available for the adder/subtractor.
+// BO requests that Register B drive the shared bus through bus.v.
+// Register B's value is also made available for the adder/subtractor.
 // -----------------------------------------------------------------------------
 
 module register_b (
@@ -17,9 +18,12 @@ module register_b (
     input  wire       sap_clk_en,
 
     input  wire       BI,
+    input  wire       BO,
     input  wire [7:0] bus_value,
 
-    output wire [7:0] b_value
+    output wire [7:0] b_value,
+    output wire [7:0] b_out,
+    output wire       b_oe
 );
 
     wire [3:0] b_low;
@@ -44,5 +48,12 @@ module register_b (
     );
 
     assign b_value = {b_high, b_low};
+
+    chip_74ls245 u_b_output_buffer (
+        .data_in(b_value),
+        .output_enable(BO),
+        .data_out(b_out),
+        .output_enable_intent(b_oe)
+    );
 
 endmodule

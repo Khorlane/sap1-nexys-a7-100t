@@ -84,7 +84,10 @@ module sap1_top (
     wire       a_oe;
 
     wire       b_input_enable;
+    wire       b_output_enable;
     wire [7:0] b_value;
+    wire [7:0] b_out;
+    wire       b_oe;
 
     wire [7:0] alu_result;
     wire [7:0] alu_out;
@@ -114,6 +117,7 @@ module sap1_top (
     assign a_input_enable   = ai_pending;
     assign a_output_enable  = 1'b0;
     assign b_input_enable   = bi_pending;
+    assign b_output_enable  = a_output_enable;
 
     sap1_switch_sync u_mode_switch_sync (
         .clk(CLK100MHZ),
@@ -225,8 +229,11 @@ module sap1_top (
         .reset(reset),
         .sap_clk_en(sap_clk_en),
         .BI(b_input_enable),
+        .BO(b_output_enable),
         .bus_value(sap_bus_value),
-        .b_value(b_value)
+        .b_value(b_value),
+        .b_out(b_out),
+        .b_oe(b_oe)
     );
 
     alu u_alu (
@@ -243,6 +250,8 @@ module sap1_top (
     bus u_bus (
         .a_out(a_out),
         .a_oe(a_oe),
+        .b_out(b_out),
+        .b_oe(b_oe),
         .alu_out(alu_out),
         .alu_oe(alu_oe),
         .manual_bus_value(manual_bus_value),
