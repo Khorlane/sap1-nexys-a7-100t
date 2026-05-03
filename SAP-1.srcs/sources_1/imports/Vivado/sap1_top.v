@@ -20,6 +20,9 @@
 //   BTNR = request one B-register load on the next SAP clock-enable pulse
 //   SW0  = clock mode: 0 auto, 1 manual
 //   SW1  = halt:       0 run,  1 halted
+//   SW2  = unused
+//   SW3  = unused
+//   SW4  = unused
 //   SW5  = ALU subtract control
 //   SW6  = ALU output-enable
 //   SW7  = manual bus output-enable
@@ -88,6 +91,10 @@ module sap1_top (
     wire [7:0] b_value;
     wire [7:0] b_out;
     wire       b_oe;
+
+    wire [3:0] pc_value;
+    wire [7:0] pc_out;
+    wire       pc_oe;
 
     wire [7:0] alu_result;
     wire [7:0] alu_out;
@@ -236,6 +243,19 @@ module sap1_top (
         .b_oe(b_oe)
     );
 
+    pc u_pc (
+        .clk(CLK100MHZ),
+        .reset(reset),
+        .sap_clk_en(sap_clk_en),
+        .CE(1'b0),
+        .CO(1'b0),
+        .J(1'b0),
+        .bus_value(sap_bus_value),
+        .pc_value(pc_value),
+        .pc_out(pc_out),
+        .pc_oe(pc_oe)
+    );
+
     alu u_alu (
         .a_value(a_value),
         .b_value(b_value),
@@ -252,6 +272,8 @@ module sap1_top (
         .a_oe(a_oe),
         .b_out(b_out),
         .b_oe(b_oe),
+        .pc_out(pc_out),
+        .pc_oe(pc_oe),
         .alu_out(alu_out),
         .alu_oe(alu_oe),
         .manual_bus_value(manual_bus_value),
