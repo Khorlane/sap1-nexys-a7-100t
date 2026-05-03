@@ -41,7 +41,7 @@ module pc (
 
     assign pc_bus_value = {4'b0000, pc_value};
 
-    pc_chip_74ls245 u_pc_output_buffer (
+    chip_74ls245 u_pc_output_buffer (
         .data_in(pc_bus_value),
         .output_enable(CO),
         .data_out(pc_out),
@@ -73,19 +73,5 @@ module chip_74ls161 (
             end
         end
     end
-
-endmodule
-
-
-module pc_chip_74ls245 (
-    input  wire [7:0] data_in,
-    input  wire       output_enable,
-
-    output wire [7:0] data_out,
-    output wire       output_enable_intent
-);
-
-    assign data_out = data_in;
-    assign output_enable_intent = output_enable;
 
 endmodule

@@ -77,7 +77,7 @@ module ram (
     // ram_led1-ram_led8 are the corrected RAM outputs after the 74LS04s.
     assign ram_leds = ram_value;
 
-    ram_chip_74ls245 u5_output_buffer (
+    chip_74ls245 u5_output_buffer (
         .data_in(ram_value),
         .output_enable(RO),
         .data_out(ram_out),
@@ -127,19 +127,5 @@ module chip_74ls04_4bit (
 );
 
     assign data_out = ~data_in;
-
-endmodule
-
-
-module ram_chip_74ls245 (
-    input  wire [7:0] data_in,
-    input  wire       output_enable,
-
-    output wire [7:0] data_out,
-    output wire       output_enable_intent
-);
-
-    assign data_out = data_in;
-    assign output_enable_intent = output_enable;
 
 endmodule
