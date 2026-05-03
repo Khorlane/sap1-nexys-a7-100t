@@ -368,6 +368,8 @@ module sap1_top (
         .pc_oe(pc_oe),
         .alu_out(alu_out),
         .alu_oe(alu_oe),
+        .ram_out(ram_out),
+        .ram_oe(ram_oe),
         .manual_bus_value(manual_bus_value),
         .manual_bus_oe(manual_bus_oe),
         .bus_value(sap_bus_value),
