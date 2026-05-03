@@ -9,6 +9,7 @@
 // Current build stage:
 //   - Instantiates the SAP-1 clock controller.
 //   - Instantiates temporary manual bus/Register A load test harness.
+//   - Instantiates MAR/RAM with temporary control tie-offs.
 //   - Exposes the clock state and manual bus controls on LEDs.
 //   - Dims LED0-LED15 through global 8-bit PWM.
 //   - Dims LED16_R/LED17_R separately because the RGB LEDs are much brighter.
@@ -96,6 +97,21 @@ module sap1_top (
     wire [7:0] pc_out;
     wire       pc_oe;
 
+    wire       mi_control;
+    wire       program_mode_control;
+    wire [3:0] dip_address_control;
+    wire [3:0] mar_value;
+    wire [3:0] ram_addr;
+    wire       program_led;
+    wire       run_led;
+
+    wire       ri_control;
+    wire       ro_control;
+    wire [7:0] ram_value;
+    wire [7:0] ram_leds;
+    wire [7:0] ram_out;
+    wire       ram_oe;
+
     wire [7:0] alu_result;
     wire [7:0] alu_out;
     wire       alu_oe;
@@ -125,6 +141,23 @@ module sap1_top (
     assign a_output_enable  = 1'b0;
     assign b_input_enable   = bi_pending;
     assign b_output_enable  = a_output_enable;
+
+    // TODO: Replace temporary MAR control tie-offs with control-unit/front-panel outputs.
+    // MI low keeps the MAR from accidentally loading transient bus values.
+    // program_mode low selects run mode, so the MAR register drives ram_addr.
+    // DIP address switches are currently modeled as all off.
+    assign mi_control           = 1'b0;
+    assign program_mode_control = 1'b0;
+    assign dip_address_control  = 4'b0000;
+
+    // TODO: Replace temporary RAM control tie-offs with control-unit outputs.
+    // RI low prevents accidental writes.
+    // RO low keeps RAM off the shared bus until bus arbitration includes RAM.
+    assign ri_control = 1'b0;
+    assign ro_control = 1'b0;
+
+    // TODO: MAR/RAM debug and status outputs are intentionally unsurfaced for now.
+    // Future options: LEDs, VGA debug display, or front-panel status sections.
 
     sap1_switch_sync u_mode_switch_sync (
         .clk(CLK100MHZ),
@@ -254,6 +287,34 @@ module sap1_top (
         .pc_value(pc_value),
         .pc_out(pc_out),
         .pc_oe(pc_oe)
+    );
+
+    mar u_mar (
+        .clk(CLK100MHZ),
+        .reset(reset),
+        .sap_clk_en(sap_clk_en),
+        .MI(mi_control),
+        .program_mode(program_mode_control),
+        .dip_address(dip_address_control),
+        .bus_value(sap_bus_value),
+        .mar_value(mar_value),
+        .ram_addr(ram_addr),
+        .program_led(program_led),
+        .run_led(run_led)
+    );
+
+    ram u_ram (
+        .clk(CLK100MHZ),
+        .reset(reset),
+        .sap_clk_en(sap_clk_en),
+        .RI(ri_control),
+        .RO(ro_control),
+        .ram_addr(ram_addr),
+        .bus_value(sap_bus_value),
+        .ram_value(ram_value),
+        .ram_leds(ram_leds),
+        .ram_out(ram_out),
+        .ram_oe(ram_oe)
     );
 
     alu u_alu (
