@@ -7,9 +7,13 @@
 //   - one 74LS161-style 4-bit counter
 //   - one 74LS245-style 8-bit output buffer
 //
-// CE increments the program counter on a sap_clk_en pulse.
-// CO requests that the program counter drive the low nibble onto the shared bus.
-// J loads the program counter from the low bus nibble on a sap_clk_en pulse.
+// Control behavior:
+//   CE=0 is the normal hold state; the program counter does not increment.
+//   CE=1 increments the program counter on a sap_clk_en pulse when J=0.
+//   CO=0 is the normal idle state; the program counter does not drive the bus.
+//   CO=1 requests that the program counter drive the low nibble onto the bus.
+//   J=0 is the normal hold/count state.
+//   J=1 loads the program counter from the low bus nibble on a sap_clk_en pulse.
 // -----------------------------------------------------------------------------
 
 module pc (

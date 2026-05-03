@@ -7,8 +7,11 @@
 //   - two 74LS173-style 4-bit register chips
 //   - one 74LS245-style 8-bit output buffer
 //
-// AI loads Register A from the shared bus on a sap_clk_en pulse.
-// AO requests that Register A drive the shared bus through bus.v.
+// Control behavior:
+//   AI=0 is the normal hold state; Register A keeps its value.
+//   AI=1 loads Register A from the shared bus on a sap_clk_en pulse.
+//   AO=0 is the normal idle state; Register A does not drive the bus.
+//   AO=1 requests that Register A drive the shared bus through bus.v.
 // -----------------------------------------------------------------------------
 
 module register_a (

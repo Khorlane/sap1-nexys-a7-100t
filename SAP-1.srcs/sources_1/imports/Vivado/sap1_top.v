@@ -9,7 +9,7 @@
 // Current build stage:
 //   - Instantiates the SAP-1 clock controller.
 //   - Instantiates temporary manual bus/Register A load test harness.
-//   - Instantiates MAR/RAM with temporary control tie-offs.
+//   - Instantiates MAR/RAM/manual RAM loader with temporary control tie-offs.
 //   - Exposes the clock state and manual bus controls on LEDs.
 //   - Dims LED0-LED15 through global 8-bit PWM.
 //   - Dims LED16_R/LED17_R separately because the RGB LEDs are much brighter.
@@ -107,6 +107,13 @@ module sap1_top (
 
     wire       ri_control;
     wire       ro_control;
+    wire       ri_control_n;
+    wire       ram_loader_sel_control;
+    wire       manual_ram_write_button;
+    wire [7:0] manual_ram_data_switches;
+    wire [7:0] ram_data_in;
+    wire       ram_write_n;
+    wire       ram_write_enable;
     wire [7:0] ram_value;
     wire [7:0] ram_leds;
     wire [7:0] ram_out;
@@ -155,6 +162,19 @@ module sap1_top (
     // RO low keeps RAM off the shared bus until bus arbitration includes RAM.
     assign ri_control = 1'b0;
     assign ro_control = 1'b0;
+
+    // TODO: Replace temporary manual RAM loader tie-offs with front-panel controls.
+    // ram_loader_sel=1 selects normal run mode, so bus data is the RAM write data.
+    // manual_ram_write_button=0 means the manual write button is not pressed.
+    // manual RAM data switches are modeled as all off for now.
+    assign ram_loader_sel_control = 1'b1;
+    assign manual_ram_write_button = 1'b0;
+    assign manual_ram_data_switches = 8'h00;
+
+    // The RAM loader models its physical write output as active-low.
+    // The RAM module uses active-high RI internally, so convert at this boundary.
+    assign ri_control_n = ~ri_control;
+    assign ram_write_enable = ~ram_write_n;
 
     // TODO: MAR/RAM debug and status outputs are intentionally unsurfaced for now.
     // Future options: LEDs, VGA debug display, or front-panel status sections.
@@ -303,14 +323,25 @@ module sap1_top (
         .run_led(run_led)
     );
 
+    ram_loader u_ram_loader (
+        .clk(sap_clk_en),
+        .ram_loader_sel(ram_loader_sel_control),
+        .manual_write_btn(manual_ram_write_button),
+        .manual_data_sw(manual_ram_data_switches),
+        .bus_data(sap_bus_value),
+        .ri_n(ri_control_n),
+        .ram_data_in(ram_data_in),
+        .ram_write_n(ram_write_n)
+    );
+
     ram u_ram (
         .clk(CLK100MHZ),
         .reset(reset),
         .sap_clk_en(sap_clk_en),
-        .RI(ri_control),
+        .RI(ram_write_enable),
         .RO(ro_control),
         .ram_addr(ram_addr),
-        .bus_value(sap_bus_value),
+        .ram_data_in(ram_data_in),
         .ram_value(ram_value),
         .ram_leds(ram_leds),
         .ram_out(ram_out),

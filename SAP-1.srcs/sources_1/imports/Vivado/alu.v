@@ -8,8 +8,12 @@
 //   - two 74LS283-style 4-bit adders
 //   - one 74LS245-style 8-bit output buffer
 //
-// SU selects add/subtract by XOR-adjusting Register B and feeding the low
-// adder carry-in. EO requests that the ALU drive the shared bus through bus.v.
+// Control behavior:
+//   SU=0 selects add; SU=1 selects subtract by XOR-adjusting Register B and
+//        feeding the low adder carry-in.
+//   EO=0 is the normal idle state; the ALU does not drive the bus.
+//   EO=1 requests that the ALU drive alu_result onto the shared bus through
+//        bus.v.
 // -----------------------------------------------------------------------------
 
 module alu (

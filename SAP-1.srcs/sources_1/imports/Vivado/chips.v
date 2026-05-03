@@ -4,6 +4,10 @@
 // chips.v
 //
 // Shared physical-style chip helper models used by multiple SAP-1 components.
+//
+// Project convention:
+//   Internal control signals are active-high unless the name ends in _n.
+//   A load/output-enable input at 0 is normally idle or holding state.
 // -----------------------------------------------------------------------------
 
 module chip_74ls245 (

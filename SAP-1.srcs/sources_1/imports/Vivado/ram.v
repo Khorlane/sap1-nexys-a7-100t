@@ -12,8 +12,11 @@
 // U1 stores the low nibble.
 // U2 stores the high nibble.
 //
-// RI writes bus_value[7:0] into RAM on a sap_clk_en pulse.
-// RO requests that the RAM output value drive the shared bus.
+// Control behavior:
+//   RI=0 is the normal idle state; RAM does not write.
+//   RI=1 writes ram_data_in[7:0] into RAM on a sap_clk_en pulse.
+//   RO=0 is the normal idle state; RAM does not drive the bus.
+//   RO=1 requests that the RAM output value drive the shared bus.
 //
 // The real 74LS189 has inverted outputs, so this model preserves that internal
 // shape by producing inverted chip outputs and then correcting them through
@@ -28,7 +31,7 @@ module ram (
     input  wire       RI,
     input  wire       RO,
     input  wire [3:0] ram_addr,
-    input  wire [7:0] bus_value,
+    input  wire [7:0] ram_data_in,
 
     output wire [7:0] ram_value,
     output wire [7:0] ram_leds,
@@ -48,7 +51,7 @@ module ram (
         .clock_enable(sap_clk_en),
         .write_enable(RI),
         .address(ram_addr),
-        .data_in(bus_value[3:0]),
+        .data_in(ram_data_in[3:0]),
         .data_out_n(u1_raw_out)
     );
 
@@ -58,7 +61,7 @@ module ram (
         .clock_enable(sap_clk_en),
         .write_enable(RI),
         .address(ram_addr),
-        .data_in(bus_value[7:4]),
+        .data_in(ram_data_in[7:4]),
         .data_out_n(u2_raw_out)
     );
 

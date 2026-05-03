@@ -7,8 +7,11 @@
 //   - two 74LS173-style 4-bit register chips
 //   - one 74LS245-style 8-bit output buffer
 //
-// BI loads Register B from the shared bus on a sap_clk_en pulse.
-// BO requests that Register B drive the shared bus through bus.v.
+// Control behavior:
+//   BI=0 is the normal hold state; Register B keeps its value.
+//   BI=1 loads Register B from the shared bus on a sap_clk_en pulse.
+//   BO=0 is the normal idle state; Register B does not drive the bus.
+//   BO=1 requests that Register B drive the shared bus through bus.v.
 // Register B's value is also made available for the adder/subtractor.
 // -----------------------------------------------------------------------------
 

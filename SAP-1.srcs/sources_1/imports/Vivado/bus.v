@@ -8,6 +8,12 @@
 // The physical SAP-1 uses tri-state bus drivers. Internal FPGA tri-state nets
 // are avoided here; each source provides a data value and an output-enable
 // intent, and this module owns the final bus value.
+//
+// Output-enable behavior:
+//   *_oe=0 is the normal idle state for that source; it does not drive the bus.
+//   *_oe=1 requests that source's value onto the bus.
+//   More than one asserted output-enable is a bus conflict and forces bus_value
+//   to 0 for this FPGA-safe model.
 // -----------------------------------------------------------------------------
 
 module bus (

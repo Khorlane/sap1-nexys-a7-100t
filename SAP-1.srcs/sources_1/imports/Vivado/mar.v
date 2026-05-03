@@ -9,10 +9,12 @@
 //   - one 74LS157-style quad 2-to-1 selector
 //   - one 74LS173-style 4-bit register
 //
-// In run mode, the RAM address comes from the 74LS173 MAR register.
-// In program mode, the RAM address comes from the manual DIP-switch input.
+// Control behavior:
+//   MI=0 is the normal hold state; the MAR register keeps its value.
+//   MI=1 loads the low bus nibble into the MAR register on a sap_clk_en pulse.
+//   program_mode=0 selects run mode; ram_addr comes from the MAR register.
+//   program_mode=1 selects program mode; ram_addr comes from dip_address.
 //
-// MI loads the low bus nibble into the MAR register on a sap_clk_en pulse.
 // The 74LS157 output becomes the RAM address input.
 // -----------------------------------------------------------------------------
 
