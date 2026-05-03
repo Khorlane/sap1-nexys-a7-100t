@@ -18,3 +18,26 @@ module chip_74ls245 (
     assign output_enable_intent = output_enable;
 
 endmodule
+
+
+module chip_74ls173 (
+    input  wire       clk,
+    input  wire       reset,
+    input  wire       clock_enable,
+    input  wire       load,
+    input  wire [3:0] data_in,
+
+    output reg  [3:0] q
+);
+
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            q <= 4'h0;
+        end else if (clock_enable) begin
+            if (load) begin
+                q <= data_in;
+            end
+        end
+    end
+
+endmodule
