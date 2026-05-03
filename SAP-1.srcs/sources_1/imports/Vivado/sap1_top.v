@@ -97,6 +97,12 @@ module sap1_top (
     wire [7:0] pc_out;
     wire       pc_oe;
 
+    wire [7:0] i_value;
+    wire [3:0] opcode;
+    wire [3:0] operand;
+    wire [7:0] i_out;
+    wire       i_oe;
+
     wire       mi_control;
     wire       program_mode_control;
     wire [3:0] dip_address_control;
@@ -309,6 +315,20 @@ module sap1_top (
         .pc_oe(pc_oe)
     );
 
+    register_i u_register_i (
+        .clk(CLK100MHZ),
+        .reset(reset),
+        .sap_clk_en(sap_clk_en),
+        .II(1'b0),
+        .IO(1'b0),
+        .bus_value(sap_bus_value),
+        .i_value(i_value),
+        .opcode(opcode),
+        .operand(operand),
+        .i_out(i_out),
+        .i_oe(i_oe)
+    );
+
     mar u_mar (
         .clk(CLK100MHZ),
         .reset(reset),
@@ -366,6 +386,8 @@ module sap1_top (
         .b_oe(b_oe),
         .pc_out(pc_out),
         .pc_oe(pc_oe),
+        .i_out(i_out),
+        .i_oe(i_oe),
         .alu_out(alu_out),
         .alu_oe(alu_oe),
         .ram_out(ram_out),

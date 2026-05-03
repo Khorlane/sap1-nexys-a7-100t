@@ -23,6 +23,8 @@ module bus (
     input  wire       b_oe,
     input  wire [7:0] pc_out,
     input  wire       pc_oe,
+    input  wire [7:0] i_out,
+    input  wire       i_oe,
     input  wire [7:0] alu_out,
     input  wire       alu_oe,
     input  wire [7:0] ram_out,
@@ -37,16 +39,22 @@ module bus (
     assign bus_conflict =
         (a_oe & b_oe) |
         (a_oe & pc_oe) |
+        (a_oe & i_oe) |
         (a_oe & alu_oe) |
         (a_oe & ram_oe) |
         (a_oe & manual_bus_oe) |
         (b_oe & pc_oe) |
+        (b_oe & i_oe) |
         (b_oe & alu_oe) |
         (b_oe & ram_oe) |
         (b_oe & manual_bus_oe) |
+        (pc_oe & i_oe) |
         (pc_oe & alu_oe) |
         (pc_oe & ram_oe) |
         (pc_oe & manual_bus_oe) |
+        (i_oe & alu_oe) |
+        (i_oe & ram_oe) |
+        (i_oe & manual_bus_oe) |
         (alu_oe & ram_oe) |
         (alu_oe & manual_bus_oe) |
         (ram_oe & manual_bus_oe);
@@ -56,6 +64,7 @@ module bus (
         a_oe          ? a_out :
         b_oe          ? b_out :
         pc_oe         ? pc_out :
+        i_oe          ? i_out :
         alu_oe        ? alu_out :
         ram_oe        ? ram_out :
         manual_bus_oe ? manual_bus_value :
