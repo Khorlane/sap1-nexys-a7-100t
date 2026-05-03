@@ -115,6 +115,17 @@ module ram_loader (
   //   U6 pin 2 = RI control signal, active-low
   //   U6 pin 3 = NAND output
   //
+  // On Ben's breadboard, the SAP-1 clock is not connected directly to U6 pin 1.
+  // It is AC-coupled through a 0.01 uF capacitor, with a 1 kOhm resistor from
+  // U6 pin 1 to ground. That RC network turns the clock edge into a short write
+  // pulse instead of letting the RAM write signal follow the full clock-high
+  // interval.
+  //
+  // This FPGA model represents that short write window digitally by expecting
+  // clk to be the one-system-clock-cycle sap_clk_en pulse, not a free-running
+  // generated clock. The RAM module then writes synchronously on the system
+  // clock when that write pulse is active.
+  //
   // Since RI is active-low:
   //
   //   ri_n = 0 and clk = 1 -> NAND output = 1
